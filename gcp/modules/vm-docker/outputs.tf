@@ -41,3 +41,23 @@ output "ssh_command" {
   description = "Comando SSH para conectarse vía IAP (si no tiene IP pública)"
   value       = module.vm_base.ssh_command
 }
+
+output "copy_deployment_scripts_info" {
+  description = <<-EOT
+    Información para copiar scripts de despliegue a la VM (solo si deployment_scripts está configurado).
+
+    Ejecuta manualmente después de terraform apply:
+    ./modules/vm-docker/scripts/copy_deployment_scripts.sh <instance_name> <zone> <project_id> <destination> <source> <user>
+
+    Requiere: gcloud CLI instalado y autenticado, y VM con tag "allow-iap-ssh"
+  EOT
+  value = var.deployment_scripts != "" ? {
+    instance_name = module.vm_base.instance_name
+    zone          = var.zone
+    project_id    = var.project_id
+    destination   = var.deployment_scripts_destination
+    source        = var.deployment_scripts
+    user          = var.use_ubuntu_image ? "ubuntu" : "user"
+    script_path   = "modules/vm-docker/scripts/copy_deployment_scripts.sh"
+  } : null
+}

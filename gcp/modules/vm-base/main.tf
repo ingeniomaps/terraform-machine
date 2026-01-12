@@ -52,7 +52,8 @@ resource "google_compute_instance" "vm" {
     } : {},
     length(var.ssh_keys) > 0 ? {
       ssh-keys = join("\n", var.ssh_keys)
-    } : {}
+    } : {},
+    var.additional_metadata
   )
 
   allow_stopping_for_update = true

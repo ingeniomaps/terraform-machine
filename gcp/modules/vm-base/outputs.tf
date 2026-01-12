@@ -33,8 +33,8 @@ output "static_public_ip_name" {
 }
 
 output "ssh_command" {
-  description = "Comando SSH para conectarse vía IAP (si no tiene IP pública)"
-  value       = var.enable_public_ip ? null : "gcloud compute ssh ${google_compute_instance.vm.name} --zone=${google_compute_instance.vm.zone} --project=${var.project_id} --tunnel-through-iap"
+  description = "Comando SSH para conectarse. Si tiene IP pública, usa SSH directo. Si no, usa IAP."
+  value       = var.enable_public_ip ? "ssh -i /ruta/a/tu/clave.pem ubuntu@${google_compute_instance.vm.network_interface[0].access_config[0].nat_ip}" : "gcloud compute ssh ${google_compute_instance.vm.name} --zone=${google_compute_instance.vm.zone} --project=${var.project_id} --tunnel-through-iap"
 }
 
 output "self_link" {

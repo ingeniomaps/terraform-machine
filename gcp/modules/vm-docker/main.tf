@@ -23,4 +23,7 @@ module "vm_base" {
   startup_script        = local.startup_script
   ssh_keys              = var.ssh_keys
   purpose_label         = "docker-vm"
+  additional_metadata = length(var.microservices) > 0 ? {
+    microservices_json = base64encode(local.microservices_json)
+  } : {}
 }

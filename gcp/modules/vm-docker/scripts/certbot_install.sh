@@ -1,12 +1,11 @@
 #!/bin/bash
-set -e
-set -x  # Debug: mostrar comandos ejecutados
+set -euo pipefail
 
-# Log para debugging
+# Colores
+readonly GREEN='\033[0;32m'
+readonly NC='\033[0m'
+
 exec > >(tee /var/log/certbot-install.log) 2>&1
-echo "=== Iniciando instalación de Certbot ==="
-echo "Fecha: $(date)"
-echo "Usuario: $(whoami)"
 
 # Actualizar sistema
 apt-get update -y
@@ -17,4 +16,4 @@ apt-get install -y certbot
 # Verificar instalación
 certbot --version
 
-echo "=== Instalación de Certbot completada ==="
+echo -e "$${GREEN}Certbot installed successfully$${NC}"
