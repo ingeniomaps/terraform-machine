@@ -1,0 +1,177 @@
+# ============================================================================
+# CONFIGURACIÓN DE EJEMPLO PARA VM DOCKER
+# ============================================================================
+# Este archivo es un template de referencia. Copia este archivo a
+# terraform.tfvars y ajusta los valores según tu entorno.
+# ============================================================================
+
+# ============================================================================
+# CONFIGURACIÓN DEL PROYECTO
+# ============================================================================
+project_id = "tu-proyecto-123456"
+region     = "us-central1"  # Opcional, default: "us-central1"
+zone       = "us-central1-a"  # Opcional, default: "us-central1-a"
+
+# Opcional: Ruta al archivo de credenciales (relativa desde la raíz del proyecto)
+# Si no se especifica, se usa GOOGLE_APPLICATION_CREDENTIALS o gcloud auth
+# credentials_file = "keys/account_service.json"
+
+# ============================================================================
+# ESTADO DE LA INFRAESTRUCTURA COMPARTIDA (OPCIONAL)
+# ============================================================================
+# Opción 1: Usar remote_state (requiere acceso al bucket)
+# Recomendado si tienes acceso al bucket de terraform-state
+shared_infra_state_bucket = "terraform-state-<ambiente>"
+shared_infra_state_prefix = "shared/terraform"
+
+# Opción 2: Especificar valores directamente (más simple, no requiere acceso al bucket)
+# Usa esta opción si no tienes acceso al bucket o prefieres valores explícitos
+# vm_subnet_name        = "workspace-<ambiente>-vpc-vm-subnet"
+# service_account_email = "vm-reader@tu-proyecto-<ambiente>-123456.iam.gserviceaccount.com"
+
+# Opcional: Información adicional de red (se obtiene automáticamente si usas Opción 1)
+# Útil para validaciones y documentación, especialmente si usas static_internal_ip
+# vm_subnet_cidr = "10.0.0.0/24"  # CIDR de la subnet (para validar IPs estáticas)
+# vpc_name       = "workspace-<ambiente>-vpc"  # Nombre de la VPC (para referencias)
+# network_name   = "workspace-<ambiente>"  # Nombre de la red (workspace-env, se obtiene automáticamente)
+
+# ============================================================================
+# CONFIGURACIÓN DE LA VM
+# ============================================================================
+instance_name = "vm-docker-<ambiente>"  # Requerido
+machine_type  = "e2-medium"  # Opcional, default: "e2-medium". Opciones: e2-small, e2-medium, e2-standard-2, etc.
+
+# Disco
+boot_disk_size = 20  # Tamaño en GB (mínimo 10, máximo 65536)
+boot_disk_type = "pd-standard"  # Opciones: pd-standard, pd-ssd
+
+# Red
+enable_public_ip = false  # true = IP pública, false = usar Cloud NAT
+
+# Opcional: IP estática pública (solo si enable_public_ip = true)
+# Si especificas un nombre, se crea una nueva IP estática con ese nombre
+# static_public_ip = "vm-docker-<ambiente>-static-ip"
+
+# Opcional: IP interna estática (debe estar en el rango de la subnet)
+# Si especificas vm_subnet_cidr, se validará automáticamente que la IP esté en el rango
+# static_internal_ip = "10.0.0.10"  # IP del rango de vm_subnet_cidr
+
+# Tags y Labels
+# Nota: El tag "allow-iap-ssh" se agrega automáticamente para habilitar SSH vía IAP
+# Solo agrega tags adicionales aquí si los necesitas
+# Para SSH directo desde Internet, agrega el tag "allow-ssh" (se expandirá automáticamente)
+tags = []  # Ejemplo: ["allow-http", "allow-https"]
+labels = {
+  environment = "<ambiente>"  # dev, qa, stg, prod
+  team        = "mi-equipo"
+  project     = "mi-proyecto"
+}
+
+# ============================================================================
+# CONFIGURACIÓN SSH (Claves PEM)
+# ============================================================================
+# Claves SSH públicas para acceso directo con archivo .pem
+# Formato: "usuario:clave_publica_completa"
+# Ejemplo:
+# ssh_keys = [
+#   "ubuntu:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC... usuario@maquina",
+#   "ubuntu:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQD... otro-usuario@otra-maquina"
+# ]
+#
+# IMPORTANTE: Terraform genera automáticamente una clave SSH usando tls_private_key
+# La clave privada se guarda en: keys/${instance_name}.pem
+# La clave pública se agrega automáticamente a la VM
+#
+# Si necesitas agregar claves SSH adicionales (de otros usuarios o máquinas),
+# agrégalas aquí en formato: "usuario:clave_publica_completa"
+ssh_keys = []
+
+# ============================================================================
+# CONFIGURACIÓN DE DOCKER Y HERRAMIENTAS
+# ============================================================================
+# Instalar Docker Compose
+install_docker_compose = true
+
+# Versión de Docker Compose a instalar (opcional, default: "v2.33.0")
+# docker_compose_version = "v2.33.0"
+
+# Instalar Certbot para certificados SSL
+# Recomendado para producción y staging
+install_certbot = false
+
+# Usar imagen Ubuntu (recomendado para desarrollo y producción)
+# false = Container-Optimized OS (más seguro, menos flexible)
+# true = Ubuntu 22.04 LTS (más flexible, permite más personalización)
+use_ubuntu_image = true
+
+# Familia de imagen Ubuntu (opcional, default: "ubuntu-2204-lts")
+# Solo aplica si use_ubuntu_image = true
+# ubuntu_image_family = "ubuntu-2204-lts"
+
+# ============================================================================
+# DESPLIEGUE DE MICROSERVICIOS
+# ============================================================================
+# Ambiente de despliegue (debe coincidir con el ambiente de shared-infra)
+# Opciones: dev, qa, stg, prod
+environment = "<ambiente>"
+
+# Opcional: Ruta local a scripts personalizados a copiar a la VM
+# Útil para archivos grandes (> 256KB), múltiples archivos o directorios completos
+# Nota: Para desplegar microservicios, usa la variable 'microservices' en lugar de scripts manuales
+# deployment_scripts = "../custom-scripts"
+
+# Opcional: Directorio destino en la VM para los scripts de despliegue
+# (default: "/home/ubuntu/configuration")
+# deployment_scripts_destination = "/home/ubuntu/configuration"
+
+# Opcional: Script de inicio personalizado adicional
+# Se ejecuta después del script de Docker y microservicios
+# metadata_startup_script = <<-EOF
+#   # Tu script personalizado aquí
+#   echo "Configuración adicional..."
+# EOF
+
+# Opcional: Microservicios a desplegar automáticamente
+# Los microservicios se clonan desde Git y se despliegan usando Docker Compose
+# o comandos personalizados especificados en launch_command
+microservices = [
+  # Ejemplo 1: Microservicio con docker-compose.yml
+  # {
+  #   name           = "api-service"
+  #   repo_url       = "https://github.com/usuario/api-service.git"
+  #   branch         = "main"  # o "develop", "staging", "production", etc.
+  #   env_file       = "envs/api-service.env"  # Ruta relativa al archivo .env
+  #   launch_command = null  # null = usar docker-compose.yml o installer.sh
+  # },
+  #
+  # Ejemplo 2: Microservicio con comando personalizado
+  # {
+  #   name           = "worker-service"
+  #   repo_url       = "https://github.com/usuario/worker-service.git"
+  #   branch         = "develop"
+  #   env_file       = "envs/worker-service.env"
+  #   launch_command = "make launch SERVICIOS=postgres,redis"  # Comando personalizado
+  # },
+  #
+  # Ejemplo 3: Microservicio con contenido .env directo (para archivos pequeños)
+  # {
+  #   name           = "simple-service"
+  #   repo_url       = "https://github.com/usuario/simple-service.git"
+  #   branch         = "main"
+  #   env_file       = <<-EOF
+  #     ALLOWED_HOSTS=example.com
+  #     DEBUG=false
+  #     DATABASE_URL=postgresql://user:pass@localhost/db
+  #   EOF
+  #   launch_command = null
+  # }
+]
+
+# ============================================================================
+# NOTAS IMPORTANTES
+# ============================================================================
+# 1. Los archivos .tfvars reales están en .gitignore para proteger secretos
+# 2. Copia este archivo y renómbralo: terraform.tfvars
+# 3. Reemplaza <ambiente> con el nombre real de tu ambiente (dev, qa, stg, prod)
+# 4. Ajusta los valores según tu configuración de GCP
+# 5. Los microservicios se actualizan mediante `make deploy` o `make update-services`

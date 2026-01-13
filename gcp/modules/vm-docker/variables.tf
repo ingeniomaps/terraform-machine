@@ -137,13 +137,30 @@ variable "ubuntu_image_family" {
 }
 
 variable "deployment_scripts" {
-  description = "Scripts de despliegue a copiar a la VM (ruta local)"
+  description = <<-EOT
+    Ruta local a scripts o archivos de despliegue a copiar a la VM.
+
+    Útil para archivos grandes que exceden el límite de metadata (256KB),
+    múltiples archivos, o directorios completos.
+
+    Requiere gcloud CLI instalado y autenticado localmente, y que la VM
+    tenga el tag "allow-iap-ssh" para conexiones vía IAP.
+
+    Para scripts pequeños (< 256KB), considera usar `metadata_startup_script`.
+    Para microservicios, usa la variable `microservices`.
+  EOT
   type        = string
   default     = ""
 }
 
 variable "deployment_scripts_destination" {
-  description = "Directorio destino en la VM para los scripts de despliegue"
+  description = <<-EOT
+    Directorio destino en la VM donde se copiarán los scripts de despliegue.
+
+    Solo se usa si `deployment_scripts` está especificado.
+    Los archivos se copian recursivamente desde el directorio origen
+    al directorio destino especificado.
+  EOT
   type        = string
   default     = "/home/ubuntu/configuration"
 }
@@ -151,20 +168,23 @@ variable "deployment_scripts_destination" {
 variable "microservices" {
   description = "Lista de microservicios a desplegar (repositorios GitHub)"
   type = list(object({
-    name     = string
-    repo_url = string
-    branch   = string
-    env_file = string # Contenido del archivo .env o ruta relativa a un archivo .env (ej: "envs/local-deps.env")
+    name          = string
+    repo_url      = string
+    branch        = string
+    env_file      = string  # Contenido del archivo .env o ruta relativa a un archivo .env (ej: "envs/local-deps.env")
+    launch_command = string # (Obligatorio) Comando personalizado para lanzar el microservicio, puede ser null.
   }))
   default = []
 }
 
+# Variable 'environment' no se usa actualmente en el módulo
+# Se mantiene para compatibilidad futura o uso en scripts personalizados
 variable "environment" {
-  description = "Ambiente de despliegue (dev, stg, prod)"
+  description = "Ambiente de despliegue (dev, qa, stg, prod). Actualmente no se usa en el módulo, se mantiene para compatibilidad."
   type        = string
   default     = "dev"
   validation {
-    condition     = contains(["dev", "stg", "prod"], var.environment)
-    error_message = "environment debe ser dev, stg o prod"
+    condition     = contains(["dev", "qa", "stg", "prod"], var.environment)
+    error_message = "environment debe ser dev, qa, stg o prod"
   }
 }

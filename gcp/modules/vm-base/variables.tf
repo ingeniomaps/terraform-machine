@@ -105,3 +105,9 @@ variable "purpose_label" {
   type        = string
   default     = "vm"
 }
+
+variable "additional_metadata" {
+  description = "Metadata adicional para la VM (mapa de clave-valor)"
+  type        = map(string)
+  default     = {}
+}
