@@ -57,7 +57,8 @@ deploy_service() {
   local repo_url="$2"
   local branch="$3"
   local env_content_base64="$4"
-  local launch_command="$5"
+  local env_file_name="$5"
+  local launch_command="$6"
 
   echo -e "${BLUE}=== Verifying microservice: $name ===${NC}"
 
@@ -80,8 +81,10 @@ deploy_service() {
 
   if [ -n "$env_content_base64" ]; then
     env_content_decoded=$(echo "$env_content_base64" | base64 -d)
-    printf '%b' "$env_content_decoded" > .env
-    echo -e "${GREEN}.env file created${NC}"
+    # Usar env_file_name si está especificado, sino usar .env por defecto
+    env_file_name="${env_file_name:-.env}"
+    printf '%b' "$env_content_decoded" > "$env_file_name"
+    echo -e "${GREEN}$env_file_name file created${NC}"
   else
     echo -e "${YELLOW}Warning: No .env content provided${NC}"
   fi
@@ -139,6 +142,7 @@ try:
         repo_url = service.get('repo_url', '')
         branch = service.get('branch', 'main')
         env_file = service.get('env_file', '')
+        env_file_name = service.get('env_file_name', '.env')
         launch_command = service.get('launch_command')
 
         if not name or not repo_url:
@@ -152,7 +156,7 @@ try:
         else:
             launch_command_b64 = ''
 
-        print(f'deploy_service {shlex.quote(name)} {shlex.quote(repo_url)} {shlex.quote(branch)} {shlex.quote(env_content_b64)} {shlex.quote(launch_command_b64)}')
+        print(f'deploy_service {shlex.quote(name)} {shlex.quote(repo_url)} {shlex.quote(branch)} {shlex.quote(env_content_b64)} {shlex.quote(env_file_name)} {shlex.quote(launch_command_b64)}')
 except json.JSONDecodeError as e:
     print(f'Error: Invalid JSON: {e}', file=sys.stderr)
     sys.exit(1)
