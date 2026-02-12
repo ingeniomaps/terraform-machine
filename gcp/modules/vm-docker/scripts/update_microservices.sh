@@ -60,6 +60,8 @@ deploy_service() {
   local env_file_name="$5"
   local launch_command="$6"
 
+  [ -z "$env_file_name" ] && env_file_name=".env"
+
   echo -e "${BLUE}=== Verifying microservice: $name ===${NC}"
 
   if service_exists "$name"; then
@@ -81,8 +83,6 @@ deploy_service() {
 
   if [ -n "$env_content_base64" ]; then
     env_content_decoded=$(echo "$env_content_base64" | base64 -d)
-    # Usar env_file_name si está especificado, sino usar .env por defecto
-    env_file_name="${env_file_name:-.env}"
     printf '%b' "$env_content_decoded" > "$env_file_name"
     echo -e "${GREEN}$env_file_name file created${NC}"
   else

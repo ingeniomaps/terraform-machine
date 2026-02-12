@@ -27,7 +27,10 @@ deploy_service() {
   local repo_url="$2"
   local branch="$3"
   local env_content="$4"
-  local launch_command="$5"
+  local env_file_name="$5"
+  local launch_command="$6"
+
+  [ -z "$env_file_name" ] && env_file_name=".env"
 
   echo -e "$$${BLUE}=== Verifying microservice: $name ===$$${NC}"
 
@@ -48,8 +51,8 @@ deploy_service() {
   cd "$SERVICE_DIR"
   git config --global --add safe.directory "$SERVICE_DIR" 2>/dev/null || true
 
-  printf '%b' "$env_content" > .env
-  echo -e "$${GREEN}.env file created$${NC}"
+  printf '%b' "$env_content" > "$env_file_name"
+  echo -e "$${GREEN}$env_file_name file created$${NC}"
 
   # Validar launch_command
   launch_command_valid=false
@@ -90,7 +93,7 @@ deploy_service() {
 
 # Desplegar cada microservicio
 %{ for service in microservices ~}
-deploy_service "${service.name}" "${service.repo_url}" "${service.branch}" ${jsonencode(service.env_file)} ${try(jsonencode(service.launch_command), jsonencode(""))}
+deploy_service "${service.name}" "${service.repo_url}" "${service.branch}" ${jsonencode(service.env_file)} "${service.env_file_name}" ${try(jsonencode(service.launch_command), jsonencode(""))}
 %{ endfor ~}
 
 echo -e "$${GREEN}Microservices deployment completed$${NC}"
