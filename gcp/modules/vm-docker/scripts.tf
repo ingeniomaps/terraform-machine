@@ -28,15 +28,16 @@ locals {
 
   processed_microservices = [
     for service in var.microservices : {
-      name     = service.name
-      repo_url = service.repo_url
-      branch   = service.branch
-      env_file = (
+      name          = service.name
+      repo_url      = service.repo_url
+      branch        = service.branch
+      env_file      = (
         # Detectar si es una ruta: contiene "/" o empieza con "./" o "../"
         (can(regex("^[./]", service.env_file)) || can(regex("/", service.env_file))) &&
         # Verificar que el archivo existe (ruta relativa desde el directorio donde está terraform.tfvars)
         fileexists("${path.root}/${service.env_file}")
       ) ? file("${path.root}/${service.env_file}") : service.env_file
+      env_file_name  = try(service.env_file_name, ".env")
       launch_command = service.launch_command # Siempre incluido, puede ser null
     }
   ]
@@ -68,10 +69,11 @@ locals {
   microservices_json = jsonencode([
     for service in local.processed_microservices : merge(
       {
-        name     = service.name
-        repo_url = service.repo_url
-        branch   = service.branch
-        env_file = service.env_file
+        name          = service.name
+        repo_url      = service.repo_url
+        branch        = service.branch
+        env_file      = service.env_file
+        env_file_name = service.env_file_name
       },
       # Solo incluir launch_command si no es null y no está vacío
       # launch_command es obligatorio pero puede ser null

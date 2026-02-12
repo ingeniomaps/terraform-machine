@@ -162,6 +162,7 @@ variable "microservices" {
     repo_url       = string
     branch         = string
     env_file       = string
+    env_file_name  = string # Nombre del archivo .env final (ej: ".env.local"). Por defecto: ".env"
     launch_command = string # (Obligatorio) Comando personalizado para lanzar el microservicio. Puede ser null si no se necesita comando personalizado
   }))
   default = []

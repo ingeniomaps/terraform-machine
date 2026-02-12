@@ -168,11 +168,12 @@ variable "deployment_scripts_destination" {
 variable "microservices" {
   description = "Lista de microservicios a desplegar (repositorios GitHub)"
   type = list(object({
-    name          = string
-    repo_url      = string
-    branch        = string
-    env_file      = string  # Contenido del archivo .env o ruta relativa a un archivo .env (ej: "envs/local-deps.env")
-    launch_command = string # (Obligatorio) Comando personalizado para lanzar el microservicio, puede ser null.
+    name           = string
+    repo_url       = string
+    branch         = string
+    env_file       = string  # Contenido del archivo .env o ruta relativa a un archivo .env (ej: "envs/local-deps.env")
+    env_file_name  = optional(string, ".env") # Nombre del archivo env en el repo (ej: ".env.local")
+    launch_command = string  # (Obligatorio) Comando personalizado para lanzar el microservicio, puede ser null.
   }))
   default = []
 }
